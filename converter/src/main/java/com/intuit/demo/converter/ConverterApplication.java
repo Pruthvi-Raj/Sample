@@ -11,7 +11,7 @@ import org.springframework.core.env.Environment;
 @SpringBootApplication
 public class ConverterApplication {
   
-  public static void main(String[] args) throws UnknownHostException {
+  public static void main(String[] args) {
     try {
       SpringApplication springApplication = new SpringApplication(ConverterApplication.class);
       Environment environment = springApplication.run(args).getEnvironment();
