@@ -13,4 +13,6 @@ public class Constants {
   
   public static final String API = "/api";
   public static final String CONVERT = "/convert";
+  
+  public static final String MARKDOWN_TO_HTML = "markdownTohtml";
 }

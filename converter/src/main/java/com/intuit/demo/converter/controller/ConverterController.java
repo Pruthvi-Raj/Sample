@@ -2,6 +2,7 @@ package com.intuit.demo.converter.controller;
 
 import com.intuit.demo.converter.service.ConverterService;
 import com.intuit.demo.converter.utils.Constants;
+import com.intuit.demo.converter.utils.Format;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,7 +31,9 @@ public class ConverterController {
       @RequestParam String toFormat,
       @RequestParam String fromFormat,
       @RequestBody String markdown) {
-    return converterService.convertFormat(toFormat, fromFormat, markdown);
+    Format toFormatEnum = Format.valueOf(toFormat.toUpperCase());
+    Format fromFormatEnum = Format.valueOf(fromFormat.toUpperCase());
+    return converterService.convertFormat(toFormatEnum, fromFormatEnum, markdown);
   }
   
 }
