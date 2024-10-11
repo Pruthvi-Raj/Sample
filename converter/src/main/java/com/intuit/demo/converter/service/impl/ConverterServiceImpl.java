@@ -77,6 +77,10 @@ public class ConverterServiceImpl implements ConverterService {
   }
   
   private String convertLineWithLinks(String line) {
+    if (!line.matches(".*\\[.*\\]\\(.*\\).*")) {
+      log.info("No link found in line: {}", line);
+      return String.format("<p>%s</p>", line);
+    }
     StringBuilder lineHtml = new StringBuilder();
     int index = 0;
     
