@@ -42,9 +42,9 @@ public class ConverterServiceImpl implements ConverterService {
           continue;
         }
         if (isHeading(line)) {
-          html.append(convertHeading(line));
+          html.append(convertHeading(line)).append("\n");
         } else {
-          html.append(convertLineWithLinks(line));
+          html.append(convertLineWithLinks(line)).append("\n");
         }
       }
       
