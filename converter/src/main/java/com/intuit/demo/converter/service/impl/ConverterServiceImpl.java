@@ -31,35 +31,55 @@ public class ConverterServiceImpl implements ConverterService {
     return "";
   }
   
+  private String convertHeading(String line) {
+    int headingLevel = 0;
+    while (line.charAt(headingLevel) == '#') {
+      headingLevel++;
+    }
+    String content = line.substring(headingLevel).trim();
+    return String.format("<h%d>%s</h%d>", headingLevel, content, headingLevel);
+  }
+  
   private String convertMarkdownToHtml(String markdown) {
     try {
       StringBuilder html = new StringBuilder();
       String[] markdownLines = markdown.split("\n");
       
       for (String line : markdownLines) {
-        if (line.isBlank()) {
+        line = line.trim();
+        if (line.isEmpty()) {
           continue;
         }
-        line = line.trim();
+//        Check if the line is a heading
         if (line.matches("^#{1,6}.*")) {
-          int count = 0;
-          while (line.charAt(count) == '#') {
-            count++;
-          }
-          html.append("<h").append(count).append(">").append(line.substring(count).trim())
-              .append("</h").append(count).append(">");
-        }
-//      [Link text](https://www.example.com)	<a href="https://www.example.com">Link text</a>
-        else if (line.matches(".*\\[.*\\]\\(.*\\).*")) {
-          int start = line.indexOf("[");
-          int end = line.indexOf("]");
-          String linkText = line.substring(start + 1, end);
-          start = line.indexOf("(");
-          end = line.indexOf(")");
-          String link = line.substring(start + 1, end);
-          html.append("<a href=\"").append(link).append("\">").append(linkText).append("</a>");
+          html.append(convertHeading(line));
         } else {
-          html.append("<p>").append(line).append("</p>");
+//          Check if the line is unformatted and with a link
+          StringBuilder lineHtml = new StringBuilder();
+          int index = 0;
+          while (index < line.length()) {
+            if (line.charAt(index) == '[') {
+              int endText = line.indexOf(']', index);
+              int startLink = line.indexOf('(', endText);
+              int endLink = line.indexOf(')', startLink);
+              
+              if (endText > 0 && startLink > endText && endLink > startLink) {
+                String linkText = line.substring(index + 1, endText);
+                String link = line.substring(startLink + 1, endLink);
+                
+                lineHtml.append("<a href=\"").append(link).append("\">").append(linkText).append("</a>");
+                index = endLink + 1;
+              } else {
+                lineHtml.append(line.charAt(index));
+                index++;
+              }
+            } else {
+              lineHtml.append(line.charAt(index));
+              index++;
+            }
+          }
+          // Wrap the processed line in a paragraph tag
+          html.append("<p>").append(lineHtml).append("</p>");
         }
       }
       return html.toString();
