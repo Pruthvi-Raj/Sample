@@ -4,12 +4,14 @@ import static com.intuit.demo.converter.utils.Constants.MARKDOWN_TO_HTML;
 
 import com.intuit.demo.converter.service.ConverterService;
 import com.intuit.demo.converter.utils.Format;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
  * @author Pruthvi Muddapuram
  */
 
+@Slf4j
 @Service
 public class ConverterServiceImpl implements ConverterService {
   
@@ -42,8 +44,10 @@ public class ConverterServiceImpl implements ConverterService {
           continue;
         }
         if (isHeading(line)) {
+          log.info("Converting heading");
           html.append(convertHeading(line)).append("\n");
         } else {
+          log.info("Converting line with links");
           html.append(convertLineWithLinks(line)).append("\n");
         }
       }
@@ -63,6 +67,11 @@ public class ConverterServiceImpl implements ConverterService {
     while (line.charAt(headingLevel) == '#') {
       headingLevel++;
     }
+//    Assuming we support only 6 levels of headings and anything above 6 is an Unformatted line
+    if (headingLevel > 6) {
+      log.info("Heading level > than 6. Marking it as a <p>. Heading level: {}", headingLevel);
+      return String.format("<p>%s</p>", line);
+    }
     String content = line.substring(headingLevel).trim();
     return String.format("<h%d>%s</h%d>", headingLevel, content, headingLevel);
   }
@@ -73,6 +82,7 @@ public class ConverterServiceImpl implements ConverterService {
     
     while (index < line.length()) {
       if (line.charAt(index) == '[') {
+        log.info("Found a link at index: {} in line: {}", index, line);
         int endText = line.indexOf(']', index);
         int startLink = line.indexOf('(', endText);
         int endLink = line.indexOf(')', startLink);
