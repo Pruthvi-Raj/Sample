@@ -4,6 +4,8 @@ import static com.intuit.demo.converter.utils.Constants.MARKDOWN_TO_HTML;
 
 import com.intuit.demo.converter.service.ConverterService;
 import com.intuit.demo.converter.utils.Format;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -39,8 +41,7 @@ public class ConverterServiceImpl implements ConverterService {
       String[] markdownLines = markdown.split("\n");
       
       for (String line : markdownLines) {
-        line = line.trim();
-        if (line.isEmpty()) {
+        if (line.isBlank()) {
           continue;
         }
         if (isHeading(line)) {
@@ -48,7 +49,7 @@ public class ConverterServiceImpl implements ConverterService {
           html.append(convertHeading(line)).append("\n");
         } else {
           log.info("Converting line with links");
-          html.append(convertLineWithLinks(line)).append("\n");
+          html.append(convertLineWithMultipleLinks(line)).append("\n");
         }
       }
       
@@ -76,37 +77,24 @@ public class ConverterServiceImpl implements ConverterService {
     return String.format("<h%d>%s</h%d>", headingLevel, content, headingLevel);
   }
   
-  private String convertLineWithLinks(String line) {
-    if (!line.matches(".*\\[.*\\]\\(.*\\).*")) {
-      log.info("No link found in line: {}", line);
-      return String.format("<p>%s</p>", line);
-    }
+  private String convertLineWithMultipleLinks(String line) {
+    Pattern pattern = Pattern.compile("\\[(.*?)\\]\\((.*?)\\)");
+    Matcher matcher = pattern.matcher(line);
     StringBuilder lineHtml = new StringBuilder();
-    int index = 0;
+    lineHtml.append("<p>");
     
-    while (index < line.length()) {
-      if (line.charAt(index) == '[') {
-        log.info("Found a link at index: {} in line: {}", index, line);
-        int endText = line.indexOf(']', index);
-        int startLink = line.indexOf('(', endText);
-        int endLink = line.indexOf(')', startLink);
-        
-        if (endText > 0 && startLink > endText && endLink > startLink) {
-          String linkText = line.substring(index + 1, endText);
-          String link = line.substring(startLink + 1, endLink);
-          
-          lineHtml.append("<a href=\"").append(link).append("\">").append(linkText).append("</a>");
-          index = endLink + 1;
-        } else {
-          lineHtml.append(line.charAt(index));
-          index++;
-        }
-      } else {
-        lineHtml.append(line.charAt(index));
-        index++;
-      }
+    int lastIndex = 0;
+    while (matcher.find()) {
+//      Append the text before the link and linkText match
+      lineHtml.append(line, lastIndex, matcher.start());
+//      Capture link and linkText from the line
+      String linkText = matcher.group(1);
+      String link = matcher.group(2);
+      lineHtml.append("<a href=\"").append(link).append("\">").append(linkText).append("</a>");
+//      Moving the index to the end of the link to continue the search for the next link in the line
+      lastIndex = matcher.end();
     }
-//    Wrap the line in a paragraph tag
-    return "<p>" + lineHtml + "</p>";
+    lineHtml.append(line, lastIndex, line.length()).append("</p>");
+    return lineHtml.toString();
   }
 }
